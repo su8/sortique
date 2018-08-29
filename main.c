@@ -42,13 +42,21 @@ static int sort_unique(const void *a, const void *b) {
 
 static unsigned int unique = 0U;
 static unsigned int reverse = 0U;
+static char *file_to_read = NULL;
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
   (void)state;
-  (void)arg;
   switch(key) {
-    case 'u': unique = 1U;   break;
-    case 'r': reverse = 1U;  break;
+    case 'u': {
+      unique = 1U;
+      file_to_read = arg;
+    }
+    break;
+    case 'r': {
+      reverse = 1U;
+      file_to_read = arg;
+    }
+    break;
     default: return ARGP_ERR_UNKNOWN;
   }
   return EXIT_SUCCESS;
@@ -88,8 +96,8 @@ int main(int argc, char *argv[]) {
     return EXIT_FAILURE;
   }
 
-  if (-1 == (fd = open(argv[2], O_RDONLY))) {
-    puts("open(argv[2], O_RDONLY) failed");
+  if (-1 == (fd = open(file_to_read, O_RDONLY))) {
+    puts("open(file_to_read, O_RDONLY) failed");
     return EXIT_FAILURE;
   }
   if (NULL == (fp = fdopen(fd, "r"))) {
