@@ -29,15 +29,15 @@ static int sort_unique(const void *, const void *);
 static int sort_reverse(const void *, const void *);
 
 static int sort_reverse(const void *a, const void *b) {
-	const char *const *const x = a;
-	const char *const *const z = b;
-	return -strcmp(*x, *z);
+  const char *const *const x = a;
+  const char *const *const z = b;
+  return -strcmp(*x, *z);
 }
 
 static int sort_unique(const void *a, const void *b) {
-	const char *const *const x = a;
-	const char *const *const z = b;
-	return strcmp(*x, *z);
+  const char *const *const x = a;
+  const char *const *const z = b;
+  return strcmp(*x, *z);
 }
 
 static unsigned int unique = 0U;
@@ -60,7 +60,7 @@ static struct argp_option options[] =
 {
   { .doc = "" },
   { .name = "unique",  .key = 'u', .arg="FILE", .doc = "output only the first of an equal run" },
-  { .name = "reverse", .key = 'r', .arg="FILE", .doc = "sort_reverse the result of comparisons" },
+  { .name = "reverse", .key = 'r', .arg="FILE", .doc = "reverse the result of comparisons" },
   { .doc = NULL }
 };
 
