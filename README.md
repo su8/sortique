@@ -1,9 +1,12 @@
-Blunt copy of coreutils `sort -u'
+Blunt copy of coreutils sort -u and sort -r
 
 # Usage
 
 ```bash
-sortique FILE
+sortique -u FILE
+
+# reverse sort
+sortique -r FILE
 ```
 
 # Installation

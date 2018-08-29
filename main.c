@@ -16,7 +16,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
 */
-#define _DEFAULT_SOURCE 1
+#include <argp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,12 +25,44 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-static int compare(const void *, const void *);
-static int compare(const void *a, const void *b) {
+static int sort_unique(const void *, const void *);
+static int sort_reverse(const void *, const void *);
+
+static int sort_reverse(const void *a, const void *b) {
+	const char *const *const x = a;
+	const char *const *const z = b;
+	return -strcmp(*x, *z);
+}
+
+static int sort_unique(const void *a, const void *b) {
 	const char *const *const x = a;
 	const char *const *const z = b;
 	return strcmp(*x, *z);
 }
+
+static unsigned int unique = 0U;
+static unsigned int reverse = 0U;
+
+static error_t parse_opt(int key, char *arg, struct argp_state *state) {
+  (void)state;
+  (void)arg;
+  switch(key) {
+    case 'u': unique = 1U;   break;
+    case 'r': reverse = 1U;  break;
+    default: return ARGP_ERR_UNKNOWN;
+  }
+  return EXIT_SUCCESS;
+}
+
+static const char doc[] = "sort lines of text files.\vMandatory arguments to long options are mandatory for short options too.\n";
+const char *argp_program_version = "sortique 1.0.3";
+static struct argp_option options[] =
+{
+  { .doc = "" },
+  { .name = "unique",       .key = 'u', .arg="FILE", .doc = "output only the first of an equal run" },
+  { .name = "sort_reverse", .key = 'r', .arg="FILE", .doc = "sort_reverse the result of comparisons" },
+  { .doc = NULL }
+};
 
 int main(int argc, char *argv[]) {
   FILE *fp = NULL;
@@ -44,14 +76,20 @@ int main(int argc, char *argv[]) {
   int fd = 0;
   off_t file_size = 0;
   struct stat st;
+  struct argp arg_parser = {
+    .doc = doc,
+    .options = options,
+    .parser = parse_opt
+  };
+  argp_parse(&arg_parser, argc, argv, 0, NULL, NULL);
 
-  if (1 == argc) {
-    puts("usage: sortique FILE");
+  if (2 > argc) {
+    puts("usage: sortique -u FILE");
     return EXIT_FAILURE;
   }
 
-  if (-1 == (fd = open(argv[1], O_RDONLY))) {
-    puts("open(argv[1], O_RDONLY) failed");
+  if (-1 == (fd = open(argv[2], O_RDONLY))) {
+    puts("open(argv[2], O_RDONLY) failed");
     return EXIT_FAILURE;
   }
   if (NULL == (fp = fdopen(fd, "r"))) {
@@ -93,7 +131,7 @@ int main(int argc, char *argv[]) {
   while ((tok = strsep(&buf, "\n"))) {
     arr[len++] = tok;
   }
-  qsort(arr, len, sizeof(char *), compare);
+  qsort(arr, len, sizeof(char *), (1U == unique) ? sort_unique : sort_reverse);
 
   puts(arr[0]);
   for (x = 1; x < len; x++) {
