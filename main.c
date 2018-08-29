@@ -59,8 +59,8 @@ const char *argp_program_version = "sortique 1.0.3";
 static struct argp_option options[] =
 {
   { .doc = "" },
-  { .name = "unique",       .key = 'u', .arg="FILE", .doc = "output only the first of an equal run" },
-  { .name = "sort_reverse", .key = 'r', .arg="FILE", .doc = "sort_reverse the result of comparisons" },
+  { .name = "unique",  .key = 'u', .arg="FILE", .doc = "output only the first of an equal run" },
+  { .name = "reverse", .key = 'r', .arg="FILE", .doc = "sort_reverse the result of comparisons" },
   { .doc = NULL }
 };
 
