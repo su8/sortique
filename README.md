@@ -7,6 +7,10 @@ sortique -u FILE
 
 # reverse sort
 sortique -r FILE
+
+# write the result to file
+sortique -u FILE -o FILE
+sortique -r FILE -o FILE
 ```
 
 # Installation

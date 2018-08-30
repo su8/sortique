@@ -24,9 +24,11 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <dirent.h>
 
 static int sort_unique(const void *, const void *);
 static int sort_reverse(const void *, const void *);
+static void write_output(char **, size_t, FILE *);
 
 static int sort_reverse(const void *a, const void *b) {
   const char *const *const x = a;
@@ -40,23 +42,50 @@ static int sort_unique(const void *a, const void *b) {
   return strcmp(*x, *z);
 }
 
+static void write_output(char **arr, size_t len, FILE *fp2) {
+  size_t x = 1;
+  if (NULL != fp2) {
+    fprintf(fp2, "%s\n", arr[0]);
+  } else {
+    puts(arr[0]);
+  }
+  for (; x < len; x++) {
+    if (0 == (strcmp(arr[x], ""))) {
+      continue;
+    }
+    if (0 != (strcmp(arr[x], arr[x - 1]))) {
+      if (NULL != fp2) {
+        fprintf(fp2, "%s\n", arr[x]);
+      } else {
+        puts(arr[x]);
+      }
+    }
+  }
+}
+
 static unsigned int unique = 0U;
 static unsigned int reverse = 0U;
 static char *file_to_read = NULL;
+static char *file_to_write = NULL;
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
   (void)state;
   switch(key) {
-    case 'u': {
+    case 'u':
+    {
       unique = 1U;
       file_to_read = arg;
     }
     break;
-    case 'r': {
+    case 'r':
+    {
       reverse = 1U;
       file_to_read = arg;
     }
     break;
+    case 'o':
+      file_to_write = arg;
+      break;
     default: return ARGP_ERR_UNKNOWN;
   }
   return EXIT_SUCCESS;
@@ -69,19 +98,21 @@ static struct argp_option options[] =
   { .doc = "" },
   { .name = "unique",  .key = 'u', .arg="FILE", .doc = "output only the first of an equal run" },
   { .name = "reverse", .key = 'r', .arg="FILE", .doc = "reverse the result of comparisons" },
+  { .name = "output",  .key = 'o', .arg="FILE", .doc = "write result to FILE instead of standard output" },
   { .doc = NULL }
 };
 
 int main(int argc, char *argv[]) {
+  int fd = 0;
+  size_t fz = 0;
+  size_t len = 0;
+  DIR *dp = NULL;
   FILE *fp = NULL;
+  FILE *fp2 = NULL;
   char *buf = NULL;
   char *tok = NULL;
-  char *ptrtofree = buf;
   char **arr = NULL;
-  size_t len = 0;
-  size_t fz = 0;
-  size_t x = 0;
-  int fd = 0;
+  char *ptrtofree = buf;
   off_t file_size = 0;
   struct stat st;
   struct argp arg_parser = {
@@ -141,14 +172,24 @@ int main(int argc, char *argv[]) {
   }
   qsort(arr, len, sizeof(char *), (1U == unique) ? sort_unique : sort_reverse);
 
-  puts(arr[0]);
-  for (x = 1; x < len; x++) {
-    if (0 == (strcmp(arr[x], ""))) {
-      continue;
+  if (NULL != file_to_write) {
+    if (0 == (access(file_to_write, F_OK)) && 0 != (access(file_to_write, W_OK))) {
+      puts("The given output filename can't be written to, it could be write protected.");
+      goto err;
     }
-    if (0 != (strcmp(arr[x], arr[x - 1]))) {
-      puts(arr[x]);
+    if (NULL != (dp = opendir(file_to_write))) {
+      closedir(dp);
+      puts("The given output filename exists as folder, exiting.");
+      goto err;
     }
+    if (NULL == (fp2 = fopen(file_to_write, "w"))) {
+      puts("fopen(file_to_write, \"w\") failed");
+      goto err;
+    }
+    write_output(arr, len, fp2);
+    fclose(fp2);
+  } else {
+    write_output(arr, len, NULL);
   }
 
 err:
